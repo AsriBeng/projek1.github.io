@@ -2,22 +2,12 @@
 session_start();
 require 'config.php'; // $conn
 
-// ================== PENDAPATAN HARI INI ==================
-$sqlPendapatanHariIni = "
-    SELECT IFNULL(SUM(total_transaksi),0) AS pendapatan_hari_ini
-    FROM tb_transaksi
-    WHERE DATE(tgl_transaksi) = CURDATE()
-";
-$resPendapatanHariIni = mysqli_query($conn, $sqlPendapatanHariIni);
-$rowPendapatanHariIni = mysqli_fetch_assoc($resPendapatanHariIni);
-$pendapatanHariIni = (int)($rowPendapatanHariIni['pendapatan_hari_ini'] ?? 0);
 
 // ================== CARD 1: RESERVASI PENDING (HARI INI) ==================
 $sqlReservasiPending = "
     SELECT COUNT(*) AS total_pending
     FROM tb_transaksi
     WHERE status = 'pending'
-      AND DATE(tgl_transaksi) = CURDATE()
 ";
 $resReservasiPending = mysqli_query($conn, $sqlReservasiPending);
 $rowReservasiPending = mysqli_fetch_assoc($resReservasiPending);
@@ -28,7 +18,6 @@ $sqlReservasiKonfirmasi = "
     SELECT COUNT(*) AS total_konfirmasi
     FROM tb_transaksi
     WHERE status = 'konfirmasi'
-      AND DATE(tgl_transaksi) = CURDATE()
 ";
 $resReservasiKonfirmasi = mysqli_query($conn, $sqlReservasiKonfirmasi);
 $rowReservasiKonfirmasi = mysqli_fetch_assoc($resReservasiKonfirmasi);
@@ -99,9 +88,9 @@ $sqlBelumSelesai = "
     LEFT JOIN tb_pelanggan p ON r.id_user = p.id_user
     LEFT JOIN tb_meja m ON r.id_meja = m.id_meja
     WHERE r.status IN ('pending','konfirmasi')
-      AND DATE(r.tgl_transaksi) = CURDATE()
-    ORDER BY r.tgl_transaksi ASC
+    ORDER BY r.tgl_transaksi DESC
 ";
+
 $resBelumSelesai = mysqli_query($conn, $sqlBelumSelesai);
 ?>
 <!DOCTYPE html>
@@ -196,7 +185,7 @@ $resBelumSelesai = mysqli_query($conn, $sqlBelumSelesai);
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title mb-1">Reservasi Pending</h6>
-                            <p class="mb-0 text-muted">Hari ini</p>
+                            <p class="mb-0 text-muted">Status pending</p>
                             <h4 class="mt-2 mb-0"><?php echo $totalPending; ?></h4>
                         </div>
                         <div class="card-icon text-warning"><i class="fas fa-hourglass-half"></i></div>
@@ -217,18 +206,6 @@ $resBelumSelesai = mysqli_query($conn, $sqlBelumSelesai);
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="card shadow-sm">
-                    <div class="card-body d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title mb-1">Pendapatan Hari Ini</h6>
-                            <p class="mb-0 text-muted"><?php echo date('d M Y'); ?></p>
-                            <h5 class="mt-2 mb-0">Rp <?php echo number_format($pendapatanHariIni, 0, ',', '.'); ?></h5>
-                        </div>
-                        <div class="card-icon text-success"><i class="fas fa-wallet"></i></div>
-                    </div>
-                </div>
-            </div>
 
             <div class="col-lg-3 col-md-6 mb-3">
                 <div class="card shadow-sm">
@@ -260,7 +237,7 @@ $resBelumSelesai = mysqli_query($conn, $sqlBelumSelesai);
         <!-- ✅ TABEL: RESERVASI BELUM SELESAI (pending + konfirmasi) -->
         <div class="card">
             <div class="card-header">
-                Reservasi Belum Selesai Hari Ini (<?php echo date('d M Y'); ?>)
+                Reservasi Status Belum Selesai
             </div>
             <div class="card-body">
                 <div class="table-responsive">
